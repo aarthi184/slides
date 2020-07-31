@@ -1,0 +1,9 @@
+.tags
+.DS_Store
+.git/
+.gitconfig
+gdh.config
+pkg/
+bin/
+*.swp
+*.swo

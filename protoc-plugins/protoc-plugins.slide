@@ -1,0 +1,209 @@
+# protoc & plugins
+31 July 2020
+
+Aarthi K
+@AarthiKamaraj
+
+## Agenda
+- The Basics of RPC
+- gRPC/Protobuf
+- protoc
+- Go Plugins
+- How to Write a Plugin
+
+## The Basics
+
+
+## How an RPC works
+- Remote Procedure Call - a communication technique
+- A method call in a different address space - commonly over the network in another computer
+- As Wikipedia says _“coded as if it were a normal (local) procedure call, without the programmer explicitly coding the details for the remote interaction.”_
+
+.image images/simple-rpc.png 200 800
+
+## gRPC
+- Open-source RPC platform developed by Google
+- Very fast, very efficient
+- Unary and Streaming
+- 2 parts
+  - Protocol - HTTP/2
+  - Data serialization - protobuf
+
+: It is somewhat pluggable with other serializations, but I’ve never seen it being done
+: Very fast, very efficient - but I’m not gonna get into all that for this talk
+
+## Protobuf
+- A mechanism for serializing structured data
+- language-neutral, platform-neutral, extensible
+- It acts as a contract for the structure of requests and response
+- How do we use this: 
+  - Write protobuf file
+  - Generate code
+  - Use the client from your code
+
+: Protobuf is 2 things - serialization format & contract for rpc
+
+: Explain what all the generated code does.
+
+## Sample Proto file
+.code code/sample.proto
+: range 1 through 15 take one byte to encode, including the field number and the field's type (you can find out more about this in Protocol Buffer Encoding). Field numbers in the range 16 through 2047 take two bytes. So you should reserve the field numbers 1 through 15 for very frequently occurring message elements.
+
+: Every protobuf encoder/decoder should be able to skip fields it does not know and set defaults for fields it cannot find.  Even though all encoders should write fields in their number order, all decoders should anticipate fields out of order and if duplicates of a field are found they are added or concatenated or merged, all depending on the field definition.
+
+: Talk about field numbers
+
+
+## protoc
+Tool that allows code generation
+
+.image images/rpc1.png 300 900
+
+: Define the terms during animation: ClientStub:makes call with RPC Request & Server stub: responds with RPC Response
+: RPC Caller & Handlers are what Protoc provides for you
+
+
+## protoc
+Tool that allows code generation
+
+.image images/rpc2.png 300 900
+
+: What do you need for this interaction? A client interface
+
+
+## protoc
+Tool that allows code generation
+
+.image images/rpc3.png 300 900
+
+
+## Protoc - Code generation
+Client Stubs - Used by the service which will make an RPC call
+
+.code code/client-stub.go /^//START USAGE/,/^//END USAGE/
+
+.code code/client-stub.go /^//START STUB/,/^//END STUB/
+
+## Protoc - Code generation
+.code code/client-stub.go /^//START IMPL/,/^//END IMPL/
+
+
+## Protoc - Code generation
+Server Stubs - Used by the service which will respond to an RPC call
+
+.code code/server-stub.go
+
+## protoc
+- protoc command:
+  - `protoc --go_out=. path/to/proto/file`
+- --go_out is the plugin that generates go code
+- There are other plugins that generate code in other languages
+- But, what else can a plugin generate?
+
+: protoc is open source - explain
+: does order matter in plugins?
+
+## go or gogo?
+.image images/gogogo.png 550 900
+
+: Gogo - very fast marshal/unmarshal
+: But, migrating from one to other is close to impossible, mostly because you get very comfortable with gogo that you never look back.
+
+## Protoc Plugins
+
+## Several Existing Protoc Plugins
+- grpc-gateway
+  - generates a reverse-proxy server which _'translates a RESTful HTTP API into gRPC'_
+- protoc-gen-swagger
+  - [github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger](https://github.com/grpc-ecosystem/grpc-gateway/tree/master/protoc-gen-swagger)
+- Protobuf to GraphQL
+  - [github.com/danielvladco/go-proto-gql](https://github.com/danielvladco/go-proto-gql)
+- Custom name for containers
+  - [github.com/containerd/containerd](https://github.com/containerd/containerd/tree/master/cmd/protoc-gen-gogoctrd)
+- Home-grown
+  - [rds/proto-extensions](https://sourcegraph.uberinternal.com/code.uber.internal/rds/proto-extensions)
+
+## How to Write a Plugin?
+Sample Usecase: Provide JSON marshallers for proto structs
+
+: 2 types of custom plugins
+: generate the go code 
+:  1. Add extensions on the generated code
+:  2. generate something else from proto file
+
+
+## FileDescriptorProto
+- This is what makes writing plugins in Go easier
+- The entire proto file can be parsed into a struct (which is called FileDescriptorProto)
+
+.image images/protoc-flow.png 300 1000
+
+: Playground link showing proto file -> read into FileDescriptorProto -> print out all the values in it
+
+## FileDescriptorProto
+.code code/fdp.go
+
+: Dependency - All files imported by this file
+: Syntax - // The syntax of the proto file.
+: 	// The supported values are "proto2" and "proto3".
+
+## Read Protobuf into FileDescriptorProto
+
+`protoc --custom_out=. /path/to/proto/file`
+
+.code code/custom-plugin.go
+
+
+: Protoc - compile protocol buffer description files
+
+: Compile Time:
+:   Proto file -> protoc read -> AST - protobuf description
+:   Unmarshal into Descriptor and generate Go code
+
+: Runtime:
+:  Go struct -> Marshal into protobuf
+:  Protobuf -> Unmarshal into Go struct
+
+## Starter Kit??
+- Read command line input
+- Options in the file
+- Write required import statements
+- Too much boilerplate?
+
+Here you go..
+- [github.com/gogo/protobuf/vanity](https://github.com/gogo/protobuf/tree/master/vanity)
+- [github.com/pseudomuto/protokit](https://github.com/pseudomuto/protokit)
+
+## Plugin - main.go
+
+.code code/custom-plugin-sk.go
+
+## Plugin - interface{}
+
+.code code/plugin-interface.go
+
+: A Plugin provides functionality to add to the output during Go code generation,
+: such as to produce RPC stubs.
+
+## Plugin - Implementation
+
+.code code/plugin-impl.go
+
+## TDD
+
+- Writing a plugin using templates allows you to write good tests for the plugin.
+- [text/template](https://golang.org/pkg/text/template)
+
+: Add Code sample of Template
+: How can you test a p.In & p.Out? Templates!
+
+## Code Structure
+
+.image images/code-structure.png 500 1000
+
+
+## Display Partial code
+.code hello.go /^//START/,/^//END/ HL12
+
+## Run your Go code
+.play hello.go
