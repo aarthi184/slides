@@ -1,30 +1,34 @@
-Title of presentation
+# Title of presentation
 23 July 2020
 
 Aarthi K
 @AarthiKamaraj
 
-*  Slide 1 Title
+## Slide 1 Title
 Test slide 1
 
-* Format your Slides
+## Format your Slides
 *et's*try*bold*.
 How do you like _italic_?
 `Program` `Font`
 _A_lot_of_italic_text_
 
-* Images
+## Images
 .image images/golang-logo.png 100 200
 
-* Display and highlight code
+## Display and highlight code
 .code hello.go
-* Display Partial code
+## Display Partial code
 .code hello.go /^//START/,/^//END/ HL12
 
-* Run your Go code
+## Run your Go code
 .play hello.go
 
-* Bullet Points
+## Bullet Points
 - First bullet point
 - One more
 - Last one!
+
+### Section
+- apple
+- orange
