@@ -201,9 +201,6 @@ Here you go..
 
 .image images/code-structure.png 500 1000
 
+## g stands for
+.iframe https://grpc.github.io/grpc/core/md_doc_g_stands_for.html
 
-## Display Partial code
-.code hello.go /^//START/,/^//END/ HL12
-
-## Run your Go code
-.play hello.go
